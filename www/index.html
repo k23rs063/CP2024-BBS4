@@ -167,17 +167,17 @@ function createPostElement(post) {
     // 編集権限があれば、編集・削除機能を表示
     const actions = canEdit ? `
         <div class="post-actions">
-            <button class="btn-edit">
+            <button class="btn-edit" onclick="startEdit('${post.id}')">
                 編集
             </button>
-            <button class="btn-delete">
+            <button class="btn-delete" onclick="deletePost('${post.id}')">
                 削除
             </button>
         </div>
     ` : '';
 
     return `
-        <div class="post">
+        <div class="post" id="post-${post.id}">
             <div class="post-header">
                 <span class="post-author">${escapeHtml(post.author)}</span>
                 <!-- 編集権限があれば、編集・削除機能を表示 -->
@@ -448,7 +448,7 @@ function updateUI(user) {
     if (user) {
         $('.logged-in').show();
         $('.logged-out').hide();
-        $('#userEmail').text(user.uid);
+        $('#userEmail').text(user.email);
     } else {
         $('.logged-in').hide();
         $('.logged-out').show();
