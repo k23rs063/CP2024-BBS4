@@ -97,6 +97,10 @@ function validateAuthInput(email, password, isRegister = false) {
     return true;
 }
 
+
+
+
+
 // 投稿処理
 function createPost(author, content) {
     if (!currentUser) {
@@ -130,6 +134,10 @@ function createPost(author, content) {
             button.prop('disabled', false);
         });
 }
+
+
+
+
 
 // HTMLエスケープ処理
 function escapeHtml(str) {
@@ -521,6 +529,9 @@ window.addEventListener('unload', function() {
         
         <!-- メッセージ表示エリア -->
         <div id="messageArea"></div>
+
+
+
 
         <!-- 認証フォーム（未ログイン時表示） -->
         <div class="auth-container logged-out">
