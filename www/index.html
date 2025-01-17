@@ -109,13 +109,17 @@ function createPost(author, content) {
     }
 
     if (!validateContent(content)) return;
+    if (!author || !author.trim()) {
+        showMessage('名前を入力してください', 'error');
+        return;
+    }
 
     const button = $('#postButton');
     button.prop('disabled', true);
 
     // author はログインしているユーザのメールアドレスに変更、userId を追加
     const postData = {
-        author: currentUser.email,
+        author: author,  // メールアドレスではなく名前を保存
         content: content,
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         userId: currentUser.uid
@@ -174,43 +178,21 @@ function createPostElement(post) {
     // 編集権限があれば、編集・削除機能を表示
     const actions = canEdit ? `
         <div class="post-actions">
-            <button class="btn-edit" onclick="startEdit('${post.id}')">
-                編集
-            </button>
-            <button class="btn-delete" onclick="deletePost('${post.id}')">
-                削除
-            </button>
+            <button class="btn-edit" onclick="startEdit('${post.id}')">編集</button>
+            <button class="btn-delete" onclick="deletePost('${post.id}')">削除</button>
         </div>
     ` : '';
 
     return `
         <div class="post" id="post-${post.id}">
             <div class="post-header">
-                <span class="post-author">${escapeHtml(post.author)}</span>
-                <!-- 編集権限があれば、編集・削除機能を表示 -->
+                <span class="post-author">${escapeHtml(post.author)}</span>  <!-- 名前を表示 -->
                 ${actions}
             </div>
             <div class="post-content">${escapeHtml(post.content)}</div>
-            <div class="edit-form">
-                <textarea class="form-control" id="edit-${post.id}"></textarea>
-                <div class="button-group">
-                    <button class="btn-primary" onclick="updatePost('${post.id}')">
-                        更新
-                    </button>
-                    <button class="btn-cancel" onclick="cancelEdit('${post.id}')">
-                        キャンセル
-                    </button>
-                </div>
-            </div>
             <div class="post-footer">
-                <span class="post-time">
-                    ${formatTimestamp(post.timestamp)}
-                </span>
-                ${post.updatedAt ? `
-                    <span class="post-updated">
-                        (編集済み: ${formatTimestamp(post.updatedAt)})
-                    </span>
-                ` : ''}
+                <span class="post-time">${formatTimestamp(post.timestamp)}</span>
+                ${post.updatedAt ? `<span class="post-updated">(編集済み: ${formatTimestamp(post.updatedAt)})</span>` : ''}
             </div>
         </div>
     `;
@@ -493,10 +475,9 @@ $('#changeBgButton').on('click', function() {
 
     // 投稿処理
     $('#postButton').on('click', function() {
-        // 投稿内容をフォームから取得
-        const authorVal = $('#authorInput').val();
-        const contentVal = $('#contentInput').val();
-        createPost(authorVal, contentVal);
+    const authorVal = $('#authorInput').val();   // 名前を取得
+    const contentVal = $('#contentInput').val(); // 投稿内容を取得
+    createPost(authorVal, contentVal);
     });
 
     $('#loginButton').on('click', function() {
@@ -538,6 +519,22 @@ window.addEventListener('unload', function() {
 
 
 
+ <style>
+  /* 名前入力欄と投稿内容の幅を80%に調整 */
+  .post-form .form-control {
+        width: 80%;      /* 幅を狭く */
+        max-width: 500px; /* 最大幅の制限 */
+        margin: 0 auto;  /* 中央寄せ */
+    }
+
+    /* 投稿ボタンの配置 */
+    .post-form .button-group {
+        text-align: center; /* ボタンも中央寄せ */
+    }
+    </style>
+
+
+
 
         <!-- 認証フォーム（未ログイン時表示） -->
         <div class="auth-container logged-out">
@@ -566,40 +563,41 @@ window.addEventListener('unload', function() {
 
         <!-- 投稿フォーム（ログイン時表示） -->
         <div class="post-form logged-in">
-            <div class="form-group">
-                <label for="contentInput">投稿内容</label>
-                <textarea id="contentInput" class="form-control" 
-                          placeholder="投稿内容を入力してください"></textarea>
-                <small class="character-count" id="contentCount">0/100</small>
-            </div>
-            <div class="button-group">
-                <button id="postButton" class="btn-primary">投稿する</button>
-            </div>
-        </div>
-
-        <!-- 背景色変更ボタンの追加 -->
-<div class="theme-toggle">
-    <button id="changeBgButton" class="btn-secondary">背景色を変更</button>
+    <div class="form-group">
+        <label for="authorInput">名前</label>
+        <input type="text" id="authorInput" class="form-control" placeholder="名前を入力してください">
+    </div>
+    <div class="form-group">
+        <label for="contentInput">投稿内容</label>
+        <textarea id="contentInput" class="form-control" placeholder="投稿内容を入力してください"></textarea>
+        <small class="character-count" id="contentCount">0/100</small>
+    </div>
+    <div class="button-group">
+        <button id="postButton" class="btn-primary">投稿する</button>
+    </div>
 </div>
+
+        <!-- 背景色変更ボタンの追加（1か所だけに統一） -->
+        <div class="theme-toggle">
+            <button id="changeBgButton" class="btn-secondary">背景色を変更</button>
+        </div>
 
         <!-- 投稿一覧 -->
         <div class="posts-container">
             <h2>投稿一覧</h2>
 
-             <!-- 背景色変更ボタン -->
-    <div class="theme-toggle">
-        <button id="changeBgButton" class="btn-secondary">背景色を変更</button>
+        <!-- 背景色変更ボタン -->
+         <div class="posts-control">
+        <select id="sortOrder" class="form-control">
+            <option value="newest">新しい順</option>
+            <option value="oldest">古い順</option>
+        </select>
     </div>
-            <div class="posts-control">
-                <select id="sortOrder" class="form-control">
-                    <option value="newest">新しい順</option>
-                    <option value="oldest">古い順</option>
-                </select>
-            </div>
-            <div id="postsList"></div>
-            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>読み込み中...</p>
+    
+    <div id="postsList"></div>
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>読み込み中...</p>
             </div>
         </div>
     </div>
